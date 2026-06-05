@@ -679,22 +679,22 @@ namespace ShareX.ScreenCaptureLib
                 else if (modeFlag != "区域多选" && e.KeyData == Keys.Space)
                 {
                     modeFlag = "截图";
-                    CloseWindow(RegionResult.Region);
+                    CloseTianruoRegionWindow();
                 }
                 else if (modeFlag != "区域多选" && e.KeyData == Keys.A)
                 {
                     modeFlag = "自动保存";
-                    CloseWindow(RegionResult.Region);
+                    CloseTianruoRegionWindow();
                 }
                 else if (modeFlag != "区域多选" && e.KeyData == Keys.S)
                 {
                     modeFlag = "保存";
-                    CloseWindow(RegionResult.Region);
+                    CloseTianruoRegionWindow();
                 }
                 else if (modeFlag != "区域多选" && e.KeyData == Keys.Q)
                 {
                     modeFlag = "贴图";
-                    CloseWindow(RegionResult.Region);
+                    CloseTianruoRegionWindow();
                 }
                 else if (modeFlag != "区域多选" && e.KeyData == Keys.C)
                 {
@@ -704,7 +704,7 @@ namespace ShareX.ScreenCaptureLib
                 else if (modeFlag != "区域多选" && e.KeyData == Keys.B)
                 {
                     modeFlag = "百度";
-                    CloseWindow(RegionResult.Region);
+                    CloseTianruoRegionWindow();
                 }
                 else if (modeFlag != "区域多选" && e.KeyData == Keys.E)
                 {
@@ -714,12 +714,12 @@ namespace ShareX.ScreenCaptureLib
                 else if (modeFlag != "区域多选" && e.KeyData == Keys.D1)
                 {
                     modeFlag = "拆分";
-                    CloseWindow(RegionResult.Region);
+                    CloseTianruoRegionWindow();
                 }
                 else if (modeFlag != "区域多选" && e.KeyData == Keys.D2)
                 {
                     modeFlag = "合并";
-                    CloseWindow(RegionResult.Region);
+                    CloseTianruoRegionWindow();
                 }
                 else
                 {
@@ -875,6 +875,40 @@ namespace ShareX.ScreenCaptureLib
             MonitorIndex = index;
 
             CloseWindow(RegionResult.Monitor);
+        }
+
+        private void CloseTianruoRegionWindow()
+        {
+            PrepareTianruoRegionPathFromCurrentOrHoverShape();
+            CloseWindow(RegionResult.Region);
+        }
+
+        private void PrepareTianruoRegionPathFromCurrentOrHoverShape()
+        {
+            if (ShapeManager == null || !ShapeManager.IsCurrentShapeTypeRegion)
+                return;
+
+            if (ShapeManager.IsCurrentShapeValid || (ShapeManager.ValidRegions != null && ShapeManager.ValidRegions.Length > 0))
+            {
+                UpdateRegionPath();
+                return;
+            }
+
+            if (!ShapeManager.IsCurrentHoverShapeValid)
+                return;
+
+            regionFillPath?.Dispose();
+            regionDrawPath?.Dispose();
+
+            regionFillPath = new GraphicsPath { FillMode = FillMode.Winding };
+            regionDrawPath = new GraphicsPath { FillMode = FillMode.Winding };
+
+            ShapeManager.CurrentHoverShape.AddShapePath(regionFillPath);
+            ShapeManager.CurrentHoverShape.AddShapePath(regionDrawPath, -1);
+
+            Rectangle hoverRectangle = CaptureHelpers.ClientToScreen(ShapeManager.CurrentHoverShape.Rectangle.Round());
+            pointFlag = new Point(hoverRectangle.X, hoverRectangle.Y);
+            rectangleFlag = new[] { hoverRectangle };
         }
 
         internal void CloseWindow(RegionResult result = RegionResult.Close)
