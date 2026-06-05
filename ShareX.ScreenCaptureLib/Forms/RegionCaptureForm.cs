@@ -67,6 +67,33 @@ namespace ShareX.ScreenCaptureLib
 
         internal Vector2 CanvasCenterOffset { get; set; } = new Vector2(0f, 0f);
 
+        #region Tianruo Compatibility Properties
+
+        private string modeFlag = "识别";
+        private bool imageGet;
+        private Point pointFlag;
+        private Rectangle[] rectangleFlag = new Rectangle[0];
+
+        public string Mode_flag => modeFlag;
+
+        public bool Image_get
+        {
+            set
+            {
+                imageGet = value;
+                if (!imageGet)
+                {
+                    modeFlag = "截图";
+                }
+            }
+        }
+
+        public Point Point_flag => pointFlag;
+
+        public Rectangle[] Rectangle_flag => rectangleFlag ?? new Rectangle[0];
+
+        #endregion
+
         internal float ZoomFactor
         {
             get
@@ -637,6 +664,73 @@ namespace ShareX.ScreenCaptureLib
 
             isKeyAllowed = true;
 
+            #region Tianruo Key Mapping
+
+            if (imageGet)
+            {
+                bool handled = true;
+
+                if (e.KeyData == Keys.Tab)
+                {
+                    modeFlag = "区域多选";
+                    Options.QuickCrop = false;
+                    handled = true;
+                }
+                else if (modeFlag != "区域多选" && e.KeyData == Keys.Space)
+                {
+                    modeFlag = "截图";
+                    CloseWindow(RegionResult.Region);
+                }
+                else if (modeFlag != "区域多选" && e.KeyData == Keys.A)
+                {
+                    modeFlag = "自动保存";
+                    CloseWindow(RegionResult.Region);
+                }
+                else if (modeFlag != "区域多选" && e.KeyData == Keys.S)
+                {
+                    modeFlag = "保存";
+                    CloseWindow(RegionResult.Region);
+                }
+                else if (modeFlag != "区域多选" && e.KeyData == Keys.Q)
+                {
+                    modeFlag = "贴图";
+                    CloseWindow(RegionResult.Region);
+                }
+                else if (modeFlag != "区域多选" && e.KeyData == Keys.C)
+                {
+                    Mode = RegionCaptureMode.ScreenColorPicker;
+                    modeFlag = "取色";
+                }
+                else if (modeFlag != "区域多选" && e.KeyData == Keys.B)
+                {
+                    modeFlag = "百度";
+                    CloseWindow(RegionResult.Region);
+                }
+                else if (modeFlag != "区域多选" && e.KeyData == Keys.E)
+                {
+                    modeFlag = "高级截图";
+                    CloseWindow(RegionResult.Fullscreen);
+                }
+                else if (modeFlag != "区域多选" && e.KeyData == Keys.D1)
+                {
+                    modeFlag = "拆分";
+                    CloseWindow(RegionResult.Region);
+                }
+                else if (modeFlag != "区域多选" && e.KeyData == Keys.D2)
+                {
+                    modeFlag = "合并";
+                    CloseWindow(RegionResult.Region);
+                }
+                else
+                {
+                    handled = false;
+                }
+
+                if (handled) return;
+            }
+
+            #endregion
+
             switch (e.KeyData)
             {
                 case Keys.Space:
@@ -786,6 +880,26 @@ namespace ShareX.ScreenCaptureLib
         internal void CloseWindow(RegionResult result = RegionResult.Close)
         {
             Result = result;
+
+            // Tianruo: capture position and multi-select rectangles before closing
+            if (imageGet)
+            {
+                if (ShapeManager != null && ShapeManager.IsCurrentShapeValid)
+                {
+                    Rectangle currentRect = CaptureHelpers.ClientToScreen(ShapeManager.CurrentRectangle.Round());
+                    pointFlag = new Point(currentRect.X, currentRect.Y);
+                }
+
+                if (ShapeManager != null && ShapeManager.ValidRegions != null && ShapeManager.ValidRegions.Length > 0)
+                {
+                    rectangleFlag = new Rectangle[ShapeManager.ValidRegions.Length];
+                    for (int i = 0; i < ShapeManager.ValidRegions.Length; i++)
+                    {
+                        rectangleFlag[i] = CaptureHelpers.ClientToScreen(ShapeManager.ValidRegions[i].Rectangle.Round());
+                    }
+                }
+            }
+
             forceClose = true;
             Close();
         }

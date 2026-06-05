@@ -212,5 +212,54 @@ namespace ShareX.ScreenCaptureLib
                 };
             }
         }
+
+        #region Tianruo Compatibility Contract
+
+        public static Bitmap GetRegionImage_X(RegionCaptureOptions options, out string flag)
+        {
+            RegionCaptureOptions newOptions = GetRegionCaptureOptions(options);
+
+            using (RegionCaptureForm form = new RegionCaptureForm(RegionCaptureMode.Default, newOptions))
+            {
+                form.Image_get = true;
+                form.ShowDialog();
+
+                flag = form.Mode_flag;
+                return form.GetResultImage();
+            }
+        }
+
+        public static Bitmap GetRegionImage_M(RegionCaptureOptions options, out string flag, out Point flag_location)
+        {
+            RegionCaptureOptions newOptions = GetRegionCaptureOptions(options);
+
+            using (RegionCaptureForm form = new RegionCaptureForm(RegionCaptureMode.Default, newOptions))
+            {
+                form.Image_get = true;
+                form.ShowDialog();
+
+                flag = form.Mode_flag;
+                flag_location = form.Point_flag;
+                return form.GetResultImage();
+            }
+        }
+
+        public static Bitmap GetRegionImage_Mo(RegionCaptureOptions options, out string flag, out Point flag_location, out Rectangle[] rectangle_flag)
+        {
+            RegionCaptureOptions newOptions = GetRegionCaptureOptions(options);
+
+            using (RegionCaptureForm form = new RegionCaptureForm(RegionCaptureMode.Default, newOptions))
+            {
+                form.Image_get = true;
+                form.ShowDialog();
+
+                flag = form.Mode_flag;
+                flag_location = form.Point_flag;
+                rectangle_flag = form.Rectangle_flag;
+                return form.GetResultImage();
+            }
+        }
+
+        #endregion
     }
 }
