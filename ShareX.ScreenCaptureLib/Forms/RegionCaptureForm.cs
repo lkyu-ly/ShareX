@@ -657,7 +657,9 @@ namespace ShareX.ScreenCaptureLib
                 return;
             }
 
-            if (!isKeyAllowed && timerStart.ElapsedMilliseconds < Options.InputDelay)
+            bool isTianruoShortcut = imageGet && IsTianruoShortcut(e.KeyData);
+
+            if (!isKeyAllowed && !isTianruoShortcut && timerStart.ElapsedMilliseconds < Options.InputDelay)
             {
                 return;
             }
@@ -666,67 +668,9 @@ namespace ShareX.ScreenCaptureLib
 
             #region Tianruo Key Mapping
 
-            if (imageGet)
+            if (imageGet && TryHandleTianruoShortcut(e.KeyData))
             {
-                bool handled = true;
-
-                if (e.KeyData == Keys.Tab)
-                {
-                    modeFlag = "区域多选";
-                    Options.QuickCrop = false;
-                    handled = true;
-                }
-                else if (modeFlag != "区域多选" && e.KeyData == Keys.Space)
-                {
-                    modeFlag = "截图";
-                    CloseTianruoRegionWindow();
-                }
-                else if (modeFlag != "区域多选" && e.KeyData == Keys.A)
-                {
-                    modeFlag = "自动保存";
-                    CloseTianruoRegionWindow();
-                }
-                else if (modeFlag != "区域多选" && e.KeyData == Keys.S)
-                {
-                    modeFlag = "保存";
-                    CloseTianruoRegionWindow();
-                }
-                else if (modeFlag != "区域多选" && e.KeyData == Keys.Q)
-                {
-                    modeFlag = "贴图";
-                    CloseTianruoRegionWindow();
-                }
-                else if (modeFlag != "区域多选" && e.KeyData == Keys.C)
-                {
-                    Mode = RegionCaptureMode.ScreenColorPicker;
-                    modeFlag = "取色";
-                }
-                else if (modeFlag != "区域多选" && e.KeyData == Keys.B)
-                {
-                    modeFlag = "百度";
-                    CloseTianruoRegionWindow();
-                }
-                else if (modeFlag != "区域多选" && e.KeyData == Keys.E)
-                {
-                    modeFlag = "高级截图";
-                    CloseWindow(RegionResult.Fullscreen);
-                }
-                else if (modeFlag != "区域多选" && e.KeyData == Keys.D1)
-                {
-                    modeFlag = "拆分";
-                    CloseTianruoRegionWindow();
-                }
-                else if (modeFlag != "区域多选" && e.KeyData == Keys.D2)
-                {
-                    modeFlag = "合并";
-                    CloseTianruoRegionWindow();
-                }
-                else
-                {
-                    handled = false;
-                }
-
-                if (handled) return;
+                return;
             }
 
             #endregion
@@ -877,6 +821,77 @@ namespace ShareX.ScreenCaptureLib
             CloseWindow(RegionResult.Monitor);
         }
 
+        private static bool IsTianruoShortcut(Keys keyData)
+        {
+            switch (keyData)
+            {
+                case Keys.Tab:
+                case Keys.Space:
+                case Keys.A:
+                case Keys.S:
+                case Keys.Q:
+                case Keys.C:
+                case Keys.B:
+                case Keys.E:
+                case Keys.D1:
+                case Keys.D2:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        private bool TryHandleTianruoShortcut(Keys keyData)
+        {
+            bool isMultiRegion = modeFlag == "区域多选";
+
+            switch (keyData)
+            {
+                case Keys.Tab:
+                    modeFlag = "区域多选";
+                    Options.QuickCrop = false;
+                    return true;
+                case Keys.Space:
+                    modeFlag = isMultiRegion ? "区域多选" : "截图";
+                    CloseTianruoRegionWindow();
+                    return true;
+                case Keys.A:
+                    modeFlag = isMultiRegion ? "多区域自动保存" : "自动保存";
+                    CloseTianruoRegionWindow();
+                    return true;
+                case Keys.S:
+                    modeFlag = "保存";
+                    CloseTianruoRegionWindow();
+                    return true;
+                case Keys.Q:
+                    modeFlag = "贴图";
+                    CloseTianruoRegionWindow();
+                    return true;
+                case Keys.C:
+                    Mode = RegionCaptureMode.ScreenColorPicker;
+                    modeFlag = "取色";
+                    return true;
+                case Keys.B:
+                    modeFlag = "百度";
+                    CloseTianruoRegionWindow();
+                    return true;
+                case Keys.E:
+                    modeFlag = "高级截图";
+                    CloseWindow(RegionResult.Fullscreen);
+                    return true;
+                case Keys.D1:
+                    modeFlag = "拆分";
+                    CloseTianruoRegionWindow();
+                    return true;
+                case Keys.D2:
+                    modeFlag = "合并";
+                    CloseTianruoRegionWindow();
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
         private void CloseTianruoRegionWindow()
         {
             PrepareTianruoRegionPathFromCurrentOrHoverShape();
@@ -930,6 +945,11 @@ namespace ShareX.ScreenCaptureLib
                     for (int i = 0; i < ShapeManager.ValidRegions.Length; i++)
                     {
                         rectangleFlag[i] = CaptureHelpers.ClientToScreen(ShapeManager.ValidRegions[i].Rectangle.Round());
+                    }
+
+                    if (pointFlag.IsEmpty)
+                    {
+                        pointFlag = new Point(rectangleFlag[0].X, rectangleFlag[0].Y);
                     }
                 }
             }
